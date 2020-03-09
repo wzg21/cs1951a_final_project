@@ -1,21 +1,29 @@
+import argparse
 import requests
 import json
 import os
 
-API_KEY = 'S8LDt8IkT8Iq9NWqggevbFQcSecXOFnYAmZK7msYXNGgk5Qj7zSHmwhl-_6ZEROSYNCqCF1aIErc_R9rQmwvjrj-jFPp38Lzu24xlj8mhMzdw-c90VtGAhLIr5hlXnYx'
-HEADERS = {'Authorization': 'Bearer %s' % API_KEY}
+def parse_args():
+    parser = argparse.ArgumentParser(description='Yelp crawl')
+    parser.add_argument('-api_key', help='API key', default='S8LDt8IkT8Iq9NWqggevbFQcSecXOFnYAmZK7msYXNGgk5Qj7zSHmwhl-_6ZEROSYNCqCF1aIErc_R9rQmwvjrj-jFPp38Lzu24xlj8mhMzdw-c90VtGAhLIr5hlXnYx')
+    parser.add_argument('-zip_codes_file', help='Zip codes file path', default='zip_codes_ri.txt')
+    parser.add_argument('-start_i', help='Start from the i th zip code', default=0)
+    return parser.parse_args()
+args = parse_args()
+
+HEADERS = {'Authorization': 'Bearer %s' % args.api_key}
 URL = 'https://api.yelp.com/v3/businesses/search'
 LIMIT = 50
 BUSINESSES_DATA_FILE = '../raw_data/businesses/raw_data_businesses_'
 REVIEWS_DATA_FILE = '../raw_data/reviews/raw_data_reviews_'
-ZIP_CODE_FILE = 'zip_codes.txt'
-START_I = 0
+ZIP_CODE_FILE = args.zip_codes_file
+START_I = int(args.start_i)
 
 
 
 f = open(ZIP_CODE_FILE, 'r')
 locations = f.readlines()
-print('There are %d zip codes.' % len(locations))
+print('There are %d zip codes, crawl from %s.' % (len(locations), locations[START_I].strip('\n')))
 f.close()
 
 for i in range(START_I, len(locations)):
