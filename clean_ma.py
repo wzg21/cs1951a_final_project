@@ -39,9 +39,15 @@ for zipcode in ri_zipcodes:
     businesses = []
     reviews = []
     print(zipcode)
-    
-    with open(b_json_path, "r") as b:
-        b_data = json.load(b)
+
+    try:
+        with open(b_json_path, "r") as b:
+            b_data = json.load(b)
+    except ValueError:
+        print ("json error")
+        continue
+    except:
+        raise
     
     for b_item in b_data:
         b_zipcode = b_item['location']['zip_code']
@@ -50,12 +56,16 @@ for zipcode in ri_zipcodes:
             continue
         businesses.append(b_item)
 
-        with open(r_json_path, "r") as r:
-            r_data = json.load(r)
-        for r_item in r_data:     
-            r_bid = r_item['business_id']
-            if r_bid == b_id:
-                reviews.append(r_item)
+        try: 
+            with open(r_json_path, "r") as r:
+                r_data = json.load(r)
+            for r_item in r_data:     
+                r_bid = r_item['business_id']
+                if r_bid == b_id:
+                    reviews.append(r_item)
+        except ValueError:
+            print ("json error")
+            continue
         
         
     # write to csv files
