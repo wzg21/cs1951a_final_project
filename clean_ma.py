@@ -38,7 +38,7 @@ for zipcode in ri_zipcodes:
     r_json_path = ri_reviews_path + "/" + "raw_data_reviews_" + zipcode + ".json"
     businesses = []
     reviews = []
-<<<<<<< Updated upstream
+
     print(zipcode)
 
     try:
@@ -49,11 +49,9 @@ for zipcode in ri_zipcodes:
         continue
     except:
         raise
-=======
     
     with open(b_json_path, "r") as b:
         b_data = json.load(b)
->>>>>>> Stashed changes
     
     for b_item in b_data:
         b_zipcode = b_item['location']['zip_code']

@@ -17,7 +17,7 @@ def write_to_csv(file, row):
 
 
 b_keys = ["id", "alias", "name", "image_url", "is_closed", "url", "review_count", "category_alias", "category_title",
-    "rating", "latitude", "longitude", "transactions", "price", "address1", "address2", "address3", "city", "zip_code", 
+    "rating", "latitude", "longitude", "delivery", "pickup", "restaurant_reservation", "price", "address1", "address2", "address3", "city", "zip_code",
     "country", "state", "display_address", "phone", "display_phone", "distance"]
 
 r_keys = ["id", "url", "text", "rating", "time_created",  "user_id",  "user_profile_url",  "user_image_url", "user_name", "business_id"]
@@ -54,6 +54,8 @@ for zipcode in ri_zipcodes:
         b_id = b_item['id'] 
         if (b_zipcode != zipcode):
             continue
+        if 'price' not in b_item or len(b_item["price"]) == 0:
+            continue
         businesses.append(b_item)
 
         try: 
@@ -75,14 +77,21 @@ for zipcode in ri_zipcodes:
         i = 0
         for key in b:
             if (key == b_keys[i]):
-                row.append(b[key])
+                if key == "price":
+                    row.append(len(b[key]))
+                else:
+                    row.append(b[key])
                 i += 1
             else:
                 if (key in b_keys):
                     ind = b_keys.index(key)
                     for j in range(ind - i):
                         row.append("")
-                    row.append(b[key])
+                    # row.append(b[key])
+                    if key == "price":
+                        row.append(len(b[key]))
+                    else:
+                        row.append(b[key])
                     i = ind
                     i += 1
                 else:
@@ -120,6 +129,23 @@ for zipcode in ri_zipcodes:
                         display_addr = ",".join(b[key]["display_address"])
                         row.append(display_addr)
                         i = ind + 8
+                    elif (key == "transactions"):
+                        ind = b_keys.index("delivery")
+                        for j in range(ind - i):
+                            row.append("")
+                        if "delivery" in b[key]:
+                            row.append(1)
+                        else:
+                            row.append(0)
+                        if "pickup" in b[key]:
+                            row.append(1)
+                        else:
+                            row.append(0)
+                        if "restaurant_reservation" in b[key]:
+                            row.append(1)
+                        else:
+                            row.append(0)
+                        i = ind+3
 
         if (i < len(b_keys)):
             for j in range(len(b_keys) - 1):
