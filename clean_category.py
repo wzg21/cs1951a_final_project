@@ -31,10 +31,23 @@ def count_categories():
 
 
 
-popular_categories = ["italian", "breakfast_brunch"]
+def pop_categories():
+	m = {}
+	pcs = []
+	for line in open('popular_categories.txt', 'r'):
+		line = line.strip('\n')
+		l = line.split(',')
+		pcs.append(l[0])
+		for c in l:
+			m[c] = l[0]
+	return pcs, m
+
+
 
 # generate a smaller businesses dataset with popular categories as indicator variables 
 def clean_categories():
+	popular_categories, m = pop_categories()
+	print(popular_categories)
 	b_keys = ["id", "name", "review_count", "category_alias", "rating", "latitude", "longitude", "delivery", "pickup",
 		"restaurant_reservation", "price", "city", "zip_code", "country", "state", "distance"] + popular_categories
 
@@ -51,14 +64,14 @@ def clean_categories():
 		cat = [0 for i in range(len(popular_categories))]
 		categories = row['category_alias'].split(",")
 		for c in categories:
-			if c in popular_categories:
-				cat[popular_categories.index(c)] = 1
+			if c in m:
+				cat[popular_categories.index(m[c])] = 1
 
 		new_row = row_small_list + cat
 		write_to_csv(b_category_file_path, new_row)
 
 def write_to_csv(file, row):
-    with open(file, 'a') as csvfile:
+    with open(file, 'a', encoding='utf-8', newline='') as csvfile:
       writer = csv.writer(csvfile)
       writer.writerow(row)
 
