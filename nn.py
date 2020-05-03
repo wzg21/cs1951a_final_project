@@ -10,6 +10,20 @@ from sklearn.model_selection import KFold
 import statsmodels.api as sm
 from statsmodels.tools import eval_measures
 
+      
+# all transaction types
+all_trans_types = ['delivery', 'pickup', 'restaurant_reservation']
+
+# all 23 categories 
+all_cats = ['italian', 'breakfast_brunch', 'newamerican', 'pizza', 'tradamerican', 'sandwiches', 'chinese', 'bars', 'japanese', 'mexican',
+'seafood', 'delis', 'coffee', 'salad', 'mediterranean', 'french', 'indpak', 'thai', 'asianfusion', 'korean', 'latin', 'desserts', 'bakeries']
+
+# all 23 category ratios 
+all_cats_ratios = [c + "_ratio" for c in all_cats]
+
+# all 52 independent features
+all_features = ['latitude', 'longitude'] + all_trans_types + ['price'] + all_cats + all_cats_ratios
+
 features = pd.read_csv('businesses_nyc_small.csv', usecols=['rating', 'latitude', 'longitude', 'delivery', 'pickup', 'restaurant_reservation', 'price',
 		'italian', 'breakfast_brunch', 'newamerican', 'pizza', 'tradamerican', 'sandwiches', 'chinese', 'bars', 'japanese', 'mexican',
 		'seafood', 'delis', 'coffee', 'salad', 'mediterranean', 'french', 'indpak', 'thai', 'asianfusion', 'korean', 'latin', 'desserts', 'bakeries'])
