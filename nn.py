@@ -10,7 +10,8 @@ from sklearn.model_selection import KFold
 import statsmodels.api as sm
 from statsmodels.tools import eval_measures
 
-      
+from sklearn.tree import DecisionTreeRegressor
+
 # all transaction types
 all_trans_types = ['delivery', 'pickup', 'restaurant_reservation']
 
@@ -82,7 +83,7 @@ def cross_validation(all_variables, labels, ind_variables, title):
     labels = labels.to_numpy()
 
     k_fold = KFold(n_splits=5, random_state=0, shuffle=True)
-    nn_test_mse_sum = nn_train_mse_sum = mlr_test_mse_sum = mlr_train_mse_sum = base_test_mse_sum = base_train_mse_sum = 0
+    nn_test_mse_sum = nn_train_mse_sum = mlr_test_mse_sum = mlr_train_mse_sum = dtr_train_mse_sum = dtr_test_mse_sum = base_test_mse_sum = base_train_mse_sum = 0
     for train_indices, test_indices in k_fold.split(features):
         train = features[train_indices]
         train_label = labels[train_indices]
@@ -110,6 +111,18 @@ def cross_validation(all_variables, labels, ind_variables, title):
         mlr_test_mse_sum += mlr_test_mse
         mlr_train_mse_sum += mlr_train_mse
 
+        # decision tree regression
+        regr = DecisionTreeRegressor(max_depth=5)
+        regr.fit(train, train_label)
+        target_train = regr.predict(train)
+        target_test = regr.predict(test)
+        regression_train_mse = eval_measures.mse(train_label, target_train)
+        print("Decision Tree Regression train MSE: ", regression_train_mse)
+        regression_test_mse = eval_measures.mse(test_label, target_test)
+        print("Decision Tree Regression test MSE: ", regression_test_mse)
+        dtr_train_mse_sum += regression_train_mse
+        dtr_test_mse_sum += regression_test_mse
+
         # baseline
         mean = np.mean(list(train_label) + list(test_label))
         base_test_mse = sum([(label - mean)**2 for label in test_label])/len(test_label)
@@ -120,9 +133,9 @@ def cross_validation(all_variables, labels, ind_variables, title):
         base_train_mse_sum += base_train_mse
 
     df = pd.DataFrame([])
-    df['model'] = ['MLR', 'MLR', 'NN', 'NN', 'baseline', 'baseline']
-    df['data'] = ['train', 'test', 'train', 'test', 'train', 'test']
-    df['MSE'] = [mlr_train_mse_sum/5, mlr_test_mse_sum/5, nn_train_mse_sum/5, nn_test_mse_sum/5, base_train_mse_sum/5, base_test_mse_sum/5]
+    df['model'] = ['MLR', 'MLR', 'NN', 'NN', 'Decision Tree', 'Decision Tree', 'baseline', 'baseline']
+    df['data'] = ['train', 'test', 'train', 'test', 'train', 'test', 'train', 'test']
+    df['MSE'] = [mlr_train_mse_sum/5, mlr_test_mse_sum/5, nn_train_mse_sum/5, nn_test_mse_sum/5, dtr_train_mse_sum/5, dtr_test_mse_sum/5, base_train_mse_sum/5, base_test_mse_sum/5]
     sns.barplot(x="model", y="MSE", hue="data", data=df, palette="Paired")
     plt.title(title)
     plt.show()
