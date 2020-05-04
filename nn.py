@@ -21,15 +21,15 @@ all_cats = ['italian', 'breakfast_brunch', 'newamerican', 'pizza', 'tradamerican
 # all 23 category ratios 
 all_cats_ratios = [c + "_ratio" for c in all_cats]
 
-# all 52 independent features
-all_features = ['latitude', 'longitude'] + all_trans_types + ['price'] + all_cats + all_cats_ratios
+# non-category variables 
+all_non_cats = all_trans_types + ['latitude', 'longitude', 'price']
 
-features = pd.read_csv('businesses_nyc_small.csv', usecols=['rating', 'latitude', 'longitude', 'delivery', 'pickup', 'restaurant_reservation', 'price',
-		'italian', 'breakfast_brunch', 'newamerican', 'pizza', 'tradamerican', 'sandwiches', 'chinese', 'bars', 'japanese', 'mexican',
-		'seafood', 'delis', 'coffee', 'salad', 'mediterranean', 'french', 'indpak', 'thai', 'asianfusion', 'korean', 'latin', 'desserts', 'bakeries'])
-labels = features.pop('rating')
-features = features.to_numpy()
-labels = labels.to_numpy()
+# all 52 independent variables
+all_ind_vars = all_non_cats + all_cats + all_cats_ratios
+
+# read all variables into a dataframe
+all_variables = pd.read_csv('./data/wobusinesses_nyc_small.csv', usecols=['rating'] + all_ind_vars)
+labels = all_variables.pop('rating')
 
 def build_model():
     model = keras.Sequential([
@@ -64,26 +64,8 @@ def plot_history(history):
     plt.legend()
     plt.show()
 
-k_fold = KFold(n_splits=5, random_state=0, shuffle=True)
-for train_indices, test_indices in k_fold.split(features):
-    train = features[train_indices]
-    train_label = labels[train_indices]
-    test = features[test_indices]
-    test_label = labels[test_indices]
 
-    # neural network
-    epoch = 200
-    model = build_model()
-    history = model.fit(
-        train, train_label,
-        epochs=epoch, verbose=0)
-    # plot_history(history)
-    loss, mae, nn_test_mse = model.evaluate(test, test_label, verbose=2)
-    nn_train_mse = history.history['mse'][epoch-1]
-    print('nn test mse: ' + str(nn_test_mse))
-    print('nn train mse: ' + str(nn_train_mse))
-
-    # multiple linear regression
+def MLR(train, test, train_label, test_label):
     train_ = sm.add_constant(train)
     res = sm.OLS(train_label, train_).fit()
     pred_train = res.predict(train_)
@@ -91,20 +73,60 @@ for train_indices, test_indices in k_fold.split(features):
     pred_test = res.predict(test)
     mlr_test_mse = eval_measures.mse(test_label, pred_test)
     mlr_train_mse = eval_measures.mse(train_label, pred_train)
-    print('mlr test MSE: ' + str(mlr_test_mse))
-    print('mlr train mse: ' + str(mlr_train_mse))
+    return mlr_train_mse, mlr_test_mse
 
-    # baseline
-    mean = np.mean(list(train_label) + list(test_label))
-    base_test_mse = sum([(label - mean)**2 for label in test_label])/len(test_label)
-    print('baseline (mean) test mse: ' + str(base_test_mse))
-    base_train_mse = sum([(label - mean)**2 for label in train_label])/len(train_label)
-    print('baseline (mean) train mse: ' + str(base_train_mse))
 
-    df = pd.DataFrame([])
-    df['model'] = ['MLR', 'MLR', 'NN', 'NN', 'baseline', 'baseline']
-    df['data'] = ['train', 'test', 'train', 'test', 'train', 'test']
-    df['MSE'] = [mlr_train_mse, mlr_test_mse, nn_train_mse, nn_test_mse, base_train_mse, base_test_mse]
-    sns.barplot(x="model", y="MSE", hue="data", data=df, palette="Paired")
-    plt.show()
+def cross_validation(all_variables, labels, ind_variables):
+    
+    features = all_variables[ind_variables].to_numpy()
+    labels = labels.to_numpy()
+
+    k_fold = KFold(n_splits=5, random_state=0, shuffle=True)
+    for train_indices, test_indices in k_fold.split(features):
+        train = features[train_indices]
+        train_label = labels[train_indices]
+        test = features[test_indices]
+        test_label = labels[test_indices]
+
+        # neural network
+        epoch = 200
+        model = build_model()
+        history = model.fit(
+            train, train_label,
+            epochs=epoch, verbose=0)
+        # plot_history(history)
+        loss, mae, nn_test_mse = model.evaluate(test, test_label, verbose=2)
+        nn_train_mse = history.history['mse'][epoch-1]
+        print('nn test mse: ' + str(nn_test_mse))
+        print('nn train mse: ' + str(nn_train_mse))
+
+        # multiple linear regression
+        mlr_train_mse, mlr_test_mse = MLR(train, test, train_label, test_label)
+        print('mlr test MSE: ' + str(mlr_test_mse))
+        print('mlr train mse: ' + str(mlr_train_mse))
+
+        # baseline
+        mean = np.mean(list(train_label) + list(test_label))
+        base_test_mse = sum([(label - mean)**2 for label in test_label])/len(test_label)
+        print('baseline (mean) test mse: ' + str(base_test_mse))
+        base_train_mse = sum([(label - mean)**2 for label in train_label])/len(train_label)
+        print('baseline (mean) train mse: ' + str(base_train_mse))
+
+        df = pd.DataFrame([])
+        df['model'] = ['MLR', 'MLR', 'NN', 'NN', 'baseline', 'baseline']
+        df['data'] = ['train', 'test', 'train', 'test', 'train', 'test']
+        df['MSE'] = [mlr_train_mse, mlr_test_mse, nn_train_mse, nn_test_mse, base_train_mse, base_test_mse]
+        sns.barplot(x="model", y="MSE", hue="data", data=df, palette="Paired")
+        plt.show()
+
+# full model - all 52 features
+cross_validation(all_variables, labels, all_ind_vars)
+
+# smallest model - non-category features (transactions + longitude/latitude + price)
+cross_validation(all_variables, labels, all_non_cats)
+
+# all features except catgory ratios
+# compare this with the 1st model to see if having category ratios helps the prediction
+# compare this with the 2nd model to see if having categories helps the prediction
+cross_validation(all_variables, labels, all_non_cats + all_cats)
 
