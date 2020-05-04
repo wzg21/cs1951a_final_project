@@ -91,7 +91,7 @@ def cross_validation(all_variables, labels, ind_variables, title):
         test_label = labels[test_indices]
 
         # neural network
-        epoch = 10
+        epoch = 200
         model = build_model(features.shape[1])
         history = model.fit(
             train, train_label,
@@ -133,24 +133,50 @@ def cross_validation(all_variables, labels, ind_variables, title):
         base_train_mse_sum += base_train_mse
 
     df = pd.DataFrame([])
-    df['model'] = ['MLR', 'MLR', 'NN', 'NN', 'Decision Tree', 'Decision Tree', 'baseline', 'baseline']
+    df['model'] = ['MLR', 'MLR', 'NN', 'NN', 'DT', 'DT', 'baseline', 'baseline']
     df['data'] = ['train', 'test', 'train', 'test', 'train', 'test', 'train', 'test']
     df['MSE'] = [mlr_train_mse_sum/5, mlr_test_mse_sum/5, nn_train_mse_sum/5, nn_test_mse_sum/5, dtr_train_mse_sum/5, dtr_test_mse_sum/5, base_train_mse_sum/5, base_test_mse_sum/5]
     sns.barplot(x="model", y="MSE", hue="data", data=df, palette="Paired")
     plt.title(title)
     plt.show()
+    mlr, nn, dt, base = mlr_test_mse_sum/5, nn_test_mse_sum/5, dtr_test_mse_sum/5, base_test_mse_sum/5
+    return mlr, nn, dt, base
 
 # full model - all 52 features
-cross_validation(all_variables, labels, all_ind_vars, 'Model results with all features')
+mlr1, nn1, dt1, base1 = cross_validation(all_variables, labels, all_ind_vars, 'Model results with all features')
 
-# # smallest model - non-category features (transactions + longitude/latitude + price)
-# cross_validation(all_variables, labels, all_non_cats)
+mlr2, nn2, dt2, base2 = cross_validation(all_variables, labels, all_cats, 'Model results with category features')
 
-# # all features except catgory ratios
-# # compare this with the 1st model to see if having category ratios helps the prediction
-# # compare this with the 2nd model to see if having categories helps the prediction
-# cross_validation(all_variables, labels, all_non_cats + all_cats)
+mlr3, nn3, dt3, base3 = cross_validation(all_variables, labels, all_cats_ratios, 'Model results with category ratio features')
 
-# without transaction
-cross_validation(all_variables, labels, ['latitude', 'longitude', 'price']+all_cats+all_cats_ratios, 'Model results without transaction type features')
+mlr4, nn4, dt4, base4 = cross_validation(all_variables, labels, ['price'], 'Model results with price feature')
+
+mlr5, nn5, dt5, base5 = cross_validation(all_variables, labels, ['latitude', 'longitude'], 'Model results with location features')
+
+mlr6, nn6, dt6, base6 = cross_validation(all_variables, labels, all_trans_types, 'Model results with transaction type features')
+
+mlr7, nn7, dt7, base7 = cross_validation(all_variables, labels, all_cats + all_trans_types + ['price', 'latitude', 'longitude'], 'Model results with all features except category ratio')
+
+mlr8, nn8, dt8, base8 = cross_validation(all_variables, labels, all_cats + all_trans_types + ['price'] + all_cats_ratios, 'Model results with all features except location')
+
+table = [[mlr1, nn1, dt1, base1],
+[mlr2, nn2, dt2, base2],
+[mlr3, nn3, dt3, base3],
+[mlr4, nn4, dt4, base4],
+[mlr5, nn5, dt5, base5],
+[mlr6, nn6, dt6, base6]]
+table = np.transpose(table)
+print(table)
+
+data = pd.DataFrame(data=table, columns=['all features','categories', 
+                                        'category ratio','price',
+                                       'location', 'transaction types'],
+                   index=['MLR','NN','DT','Baseline'])
+
+table = [[mlr7, nn7, dt7, base7],
+[mlr8, nn8, dt8, base8]]
+print(table)
+
+data = pd.DataFrame(data=table, index=['all features except category ratio','all features except location'],
+                   columns=['MLR','NN','DT','Baseline'])
 

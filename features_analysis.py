@@ -28,12 +28,29 @@ def linear_regression(col):
     plt.show()
 
 
-df = pd.read_csv('data/businesses_nyc_small.csv', usecols=['rating', 'latitude', 'longitude', 'delivery', 'pickup', 'restaurant_reservation', 'price',
-		'italian', 'breakfast_brunch', 'newamerican', 'pizza', 'tradamerican', 'sandwiches', 'chinese', 'bars', 'japanese', 'mexican',
-		'seafood', 'delis', 'coffee', 'salad', 'mediterranean', 'french', 'indpak', 'thai', 'asianfusion', 'korean', 'latin', 'desserts', 'bakeries'])
+df = pd.read_csv('data/businesses_nyc_small.csv')
 
-sns.heatmap(df.corr(), cmap=sns.diverging_palette(220, 10, as_cmap=True), center=0)
-plt.show()
+# all transaction types
+all_trans_types = ['delivery', 'pickup', 'restaurant_reservation']
+
+# all 23 categories 
+all_cats = ['italian', 'breakfast_brunch', 'newamerican', 'pizza', 'tradamerican', 'sandwiches', 'chinese', 'bars', 'japanese', 'mexican',
+'seafood', 'delis', 'coffee', 'salad', 'mediterranean', 'french', 'indpak', 'thai', 'asianfusion', 'korean', 'latin', 'desserts', 'bakeries']
+
+# all 23 category ratios 
+all_cats_ratios = [c + "_ratio" for c in all_cats]
+
+# non-category variables 
+locations = ['latitude', 'longitude']
+
+price = ['price']
+
+for g in [all_trans_types, all_cats, all_cats_ratios, locations, price]:
+    cur_df = df[['rating'] + g]
+    plt.figure(figsize=(12, 9))
+    sns.heatmap(cur_df.corr(), cmap=sns.diverging_palette(220, 10, as_cmap=True), center=0)
+    plt.tight_layout()
+    plt.show()
 
 # for col in ['delivery', 'pickup', 'restaurant_reservation', 'italian', 'breakfast_brunch', 'newamerican', 'pizza', 'tradamerican', 'sandwiches', 'chinese', 'bars', 'japanese', 'mexican',
 # 		'seafood', 'delis', 'coffee', 'salad', 'mediterranean', 'french', 'indpak', 'thai', 'asianfusion', 'korean', 'latin', 'desserts', 'bakeries']:
@@ -70,6 +87,7 @@ boxplot_df = boxplot_df.sort_values(['mean']).reset_index(drop=True)
 fig, ax = plt.subplots()
 fig.set_size_inches(8, boxplot_df['category'].nunique()/4)
 ax = sns.boxplot(x='rating', y='category', data=boxplot_df, palette="Paired")
+plt.tight_layout()
 plt.show()
 
 
