@@ -28,12 +28,12 @@ all_non_cats = all_trans_types + ['latitude', 'longitude', 'price']
 all_ind_vars = all_non_cats + all_cats + all_cats_ratios
 
 # read all variables into a dataframe
-all_variables = pd.read_csv('./data/wobusinesses_nyc_small.csv', usecols=['rating'] + all_ind_vars)
+all_variables = pd.read_csv('./data/businesses_nyc_small.csv', usecols=['rating'] + all_ind_vars)
 labels = all_variables.pop('rating')
 
-def build_model():
+def build_model(size):
     model = keras.Sequential([
-        layers.Dense(64, activation='relu', input_shape=[features.shape[1]]),
+        layers.Dense(64, activation='relu', input_shape=[size]),
         layers.Dense(64, activation='relu'),
         layers.Dense(1)
     ])
@@ -76,12 +76,13 @@ def MLR(train, test, train_label, test_label):
     return mlr_train_mse, mlr_test_mse
 
 
-def cross_validation(all_variables, labels, ind_variables):
+def cross_validation(all_variables, labels, ind_variables, title):
     
     features = all_variables[ind_variables].to_numpy()
     labels = labels.to_numpy()
 
     k_fold = KFold(n_splits=5, random_state=0, shuffle=True)
+    nn_test_mse_sum = nn_train_mse_sum = mlr_test_mse_sum = mlr_train_mse_sum = base_test_mse_sum = base_train_mse_sum = 0
     for train_indices, test_indices in k_fold.split(features):
         train = features[train_indices]
         train_label = labels[train_indices]
@@ -89,8 +90,8 @@ def cross_validation(all_variables, labels, ind_variables):
         test_label = labels[test_indices]
 
         # neural network
-        epoch = 200
-        model = build_model()
+        epoch = 10
+        model = build_model(features.shape[1])
         history = model.fit(
             train, train_label,
             epochs=epoch, verbose=0)
@@ -99,11 +100,15 @@ def cross_validation(all_variables, labels, ind_variables):
         nn_train_mse = history.history['mse'][epoch-1]
         print('nn test mse: ' + str(nn_test_mse))
         print('nn train mse: ' + str(nn_train_mse))
+        nn_test_mse_sum += nn_test_mse
+        nn_train_mse_sum += nn_train_mse
 
         # multiple linear regression
         mlr_train_mse, mlr_test_mse = MLR(train, test, train_label, test_label)
         print('mlr test MSE: ' + str(mlr_test_mse))
         print('mlr train mse: ' + str(mlr_train_mse))
+        mlr_test_mse_sum += mlr_test_mse
+        mlr_train_mse_sum += mlr_train_mse
 
         # baseline
         mean = np.mean(list(train_label) + list(test_label))
@@ -111,22 +116,28 @@ def cross_validation(all_variables, labels, ind_variables):
         print('baseline (mean) test mse: ' + str(base_test_mse))
         base_train_mse = sum([(label - mean)**2 for label in train_label])/len(train_label)
         print('baseline (mean) train mse: ' + str(base_train_mse))
+        base_test_mse_sum += base_test_mse
+        base_train_mse_sum += base_train_mse
 
-        df = pd.DataFrame([])
-        df['model'] = ['MLR', 'MLR', 'NN', 'NN', 'baseline', 'baseline']
-        df['data'] = ['train', 'test', 'train', 'test', 'train', 'test']
-        df['MSE'] = [mlr_train_mse, mlr_test_mse, nn_train_mse, nn_test_mse, base_train_mse, base_test_mse]
-        sns.barplot(x="model", y="MSE", hue="data", data=df, palette="Paired")
-        plt.show()
+    df = pd.DataFrame([])
+    df['model'] = ['MLR', 'MLR', 'NN', 'NN', 'baseline', 'baseline']
+    df['data'] = ['train', 'test', 'train', 'test', 'train', 'test']
+    df['MSE'] = [mlr_train_mse_sum/5, mlr_test_mse_sum/5, nn_train_mse_sum/5, nn_test_mse_sum/5, base_train_mse_sum/5, base_test_mse_sum/5]
+    sns.barplot(x="model", y="MSE", hue="data", data=df, palette="Paired")
+    plt.title(title)
+    plt.show()
 
 # full model - all 52 features
-cross_validation(all_variables, labels, all_ind_vars)
+cross_validation(all_variables, labels, all_ind_vars, 'Model results with all features')
 
-# smallest model - non-category features (transactions + longitude/latitude + price)
-cross_validation(all_variables, labels, all_non_cats)
+# # smallest model - non-category features (transactions + longitude/latitude + price)
+# cross_validation(all_variables, labels, all_non_cats)
 
-# all features except catgory ratios
-# compare this with the 1st model to see if having category ratios helps the prediction
-# compare this with the 2nd model to see if having categories helps the prediction
-cross_validation(all_variables, labels, all_non_cats + all_cats)
+# # all features except catgory ratios
+# # compare this with the 1st model to see if having category ratios helps the prediction
+# # compare this with the 2nd model to see if having categories helps the prediction
+# cross_validation(all_variables, labels, all_non_cats + all_cats)
+
+# without transaction
+cross_validation(all_variables, labels, ['latitude', 'longitude', 'price']+all_cats+all_cats_ratios, 'Model results without transaction type features')
 
