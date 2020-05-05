@@ -133,50 +133,48 @@ def cross_validation(all_variables, labels, ind_variables, title):
         base_train_mse_sum += base_train_mse
 
     df = pd.DataFrame([])
-    df['model'] = ['MLR', 'MLR', 'NN', 'NN', 'DT', 'DT', 'baseline', 'baseline']
+    df['model'] = ['MLR', 'MLR', 'DT', 'DT', 'NN', 'NN', 'baseline', 'baseline']
     df['data'] = ['train', 'test', 'train', 'test', 'train', 'test', 'train', 'test']
-    df['MSE'] = [mlr_train_mse_sum/5, mlr_test_mse_sum/5, nn_train_mse_sum/5, nn_test_mse_sum/5, dtr_train_mse_sum/5, dtr_test_mse_sum/5, base_train_mse_sum/5, base_test_mse_sum/5]
+    df['MSE'] = [mlr_train_mse_sum/5, mlr_test_mse_sum/5, dtr_train_mse_sum/5, dtr_test_mse_sum/5, nn_train_mse_sum/5, nn_test_mse_sum/5, base_train_mse_sum/5, base_test_mse_sum/5]
     sns.barplot(x="model", y="MSE", hue="data", data=df, palette="Paired")
     plt.title(title)
+    plt.legend(loc=[1, 1])
+    plt.tight_layout()
     plt.show()
     mlr, nn, dt, base = mlr_test_mse_sum/5, nn_test_mse_sum/5, dtr_test_mse_sum/5, base_test_mse_sum/5
     return mlr, nn, dt, base
 
 # full model - all 52 features
-mlr1, nn1, dt1, base1 = cross_validation(all_variables, labels, all_ind_vars, 'Model results with all features')
+mlr1, nn1, dt1, base1 = cross_validation(all_variables, labels, all_ind_vars, 'Full model')
 
-mlr2, nn2, dt2, base2 = cross_validation(all_variables, labels, all_cats, 'Model results with category features')
+mlr2, nn2, dt2, base2 = cross_validation(all_variables, labels, all_cats_ratios + ['price', 'latitude', 'longitude'] + all_trans_types, 'Full model without category features')
 
-mlr3, nn3, dt3, base3 = cross_validation(all_variables, labels, all_cats_ratios, 'Model results with category ratio features')
+mlr3, nn3, dt3, base3 = cross_validation(all_variables, labels, all_cats + ['price', 'latitude', 'longitude'] + all_trans_types, 'Full model without category ratio features')
 
-mlr4, nn4, dt4, base4 = cross_validation(all_variables, labels, ['price'], 'Model results with price feature')
+mlr4, nn4, dt4, base4 = cross_validation(all_variables, labels, all_cats + ['latitude', 'longitude'] + all_trans_types + all_cats_ratios, 'Full model without price feature')
 
-mlr5, nn5, dt5, base5 = cross_validation(all_variables, labels, ['latitude', 'longitude'], 'Model results with location features')
+mlr5, nn5, dt5, base5 = cross_validation(all_variables, labels, all_cats + all_trans_types + all_cats_ratios + ['price'], 'Full model without location features')
 
-mlr6, nn6, dt6, base6 = cross_validation(all_variables, labels, all_trans_types, 'Model results with transaction type features')
+mlr6, nn6, dt6, base6 = cross_validation(all_variables, labels, all_cats + ['price', 'latitude', 'longitude'] + all_cats_ratios, 'Full model without transaction type features')
 
-mlr7, nn7, dt7, base7 = cross_validation(all_variables, labels, all_cats + all_trans_types + ['price', 'latitude', 'longitude'], 'Model results with all features except category ratio')
-
-mlr8, nn8, dt8, base8 = cross_validation(all_variables, labels, all_cats + all_trans_types + ['price'] + all_cats_ratios, 'Model results with all features except location')
-
-table = [[mlr1, nn1, dt1, base1],
-[mlr2, nn2, dt2, base2],
-[mlr3, nn3, dt3, base3],
-[mlr4, nn4, dt4, base4],
-[mlr5, nn5, dt5, base5],
-[mlr6, nn6, dt6, base6]]
+table = [[mlr1, dt1, nn1, base1],
+[mlr2, dt2, nn2, base2],
+[mlr3, dt3, nn3, base3],
+[mlr4, dt4, nn4, base4],
+[mlr5, dt5, nn5, base5],
+[mlr6, dt6, nn6, base6]]
 table = np.transpose(table)
 print(table)
 
-data = pd.DataFrame(data=table, columns=['all features','categories', 
-                                        'category ratio','price',
-                                       'location', 'transaction types'],
-                   index=['MLR','NN','DT','Baseline'])
+# data = pd.DataFrame(data=table, columns=['all features','without category features', 
+#                                         'category ratio','price',
+#                                        'location', 'transaction types'],
+#                    index=['MLR','NN','DT','Baseline'])
 
-table = [[mlr7, nn7, dt7, base7],
-[mlr8, nn8, dt8, base8]]
+table = [[mlr3, dt3, nn3, base3],
+[mlr5, dt5, nn5, base5]]
 print(table)
 
-data = pd.DataFrame(data=table, index=['all features except category ratio','all features except location'],
-                   columns=['MLR','NN','DT','Baseline'])
+# data = pd.DataFrame(data=table, index=['all features except category ratio','all features except location'],
+#                    columns=['MLR','NN','DT','Baseline'])
 
