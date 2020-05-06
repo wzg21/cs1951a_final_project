@@ -84,6 +84,7 @@ def cross_validation(all_variables, labels, ind_variables, title):
 
     k_fold = KFold(n_splits=5, random_state=0, shuffle=True)
     nn_test_mse_sum = nn_train_mse_sum = mlr_test_mse_sum = mlr_train_mse_sum = dtr_train_mse_sum = dtr_test_mse_sum = base_test_mse_sum = base_train_mse_sum = 0
+    res = []
     for train_indices, test_indices in k_fold.split(features):
         train = features[train_indices]
         train_label = labels[train_indices]
@@ -132,30 +133,46 @@ def cross_validation(all_variables, labels, ind_variables, title):
         base_test_mse_sum += base_test_mse
         base_train_mse_sum += base_train_mse
 
+        res.extend([mlr_train_mse, mlr_test_mse, regression_train_mse, regression_test_mse, nn_train_mse, nn_test_mse, base_train_mse, base_test_mse])
+
     df = pd.DataFrame([])
-    df['model'] = ['MLR', 'MLR', 'DT', 'DT', 'NN', 'NN', 'baseline', 'baseline']
-    df['data'] = ['train', 'test', 'train', 'test', 'train', 'test', 'train', 'test']
-    df['MSE'] = [mlr_train_mse_sum/5, mlr_test_mse_sum/5, dtr_train_mse_sum/5, dtr_test_mse_sum/5, nn_train_mse_sum/5, nn_test_mse_sum/5, base_train_mse_sum/5, base_test_mse_sum/5]
-    sns.barplot(x="model", y="MSE", hue="data", data=df, palette="Paired")
+    df['Model'] = ['MLR', 'MLR', 'DT', 'DT', 'NN', 'NN', 'Baseline', 'Baseline']*5
+    df['data'] = ['Train', 'Test', 'Train', 'Test', 'Train', 'Test', 'Train', 'Test']*5
+    df['MSE'] = res #[mlr_train_mse_sum/5, mlr_test_mse_sum/5, dtr_train_mse_sum/5, dtr_test_mse_sum/5, nn_train_mse_sum/5, nn_test_mse_sum/5, base_train_mse_sum/5, base_test_mse_sum/5]
+    sns.barplot(x="Model", y="MSE", hue="data", data=df, palette="Paired")
     plt.title(title)
     plt.legend(loc=[1, 1])
     plt.tight_layout()
+    #plt.box(False)
     plt.show()
+    plt.savefig(fname="D:\Brown_MS\spring2020\cs1951a\cs1951a_final_project\pictures\models\\"+title,format="svg")
     mlr, nn, dt, base = mlr_test_mse_sum/5, nn_test_mse_sum/5, dtr_test_mse_sum/5, base_test_mse_sum/5
-    return mlr, nn, dt, base
+    return mlr, nn, dt, base, res
 
 # full model - all 52 features
-mlr1, nn1, dt1, base1 = cross_validation(all_variables, labels, all_ind_vars, 'Full model')
+mlr1, nn1, dt1, base1, wf = cross_validation(all_variables, labels, all_ind_vars, 'Full model')
 
-mlr2, nn2, dt2, base2 = cross_validation(all_variables, labels, all_cats_ratios + ['price', 'latitude', 'longitude'] + all_trans_types, 'Full model without category features')
+mlr2, nn2, dt2, base2, _ = cross_validation(all_variables, labels, all_cats_ratios + ['price', 'latitude', 'longitude'] + all_trans_types, 'Full model w/o category features')
 
-mlr3, nn3, dt3, base3 = cross_validation(all_variables, labels, all_cats + ['price', 'latitude', 'longitude'] + all_trans_types, 'Full model without category ratio features')
+mlr3, nn3, dt3, base3, wr = cross_validation(all_variables, labels, all_cats + ['price', 'latitude', 'longitude'] + all_trans_types, 'Full model w/o category ratio features')
 
-mlr4, nn4, dt4, base4 = cross_validation(all_variables, labels, all_cats + ['latitude', 'longitude'] + all_trans_types + all_cats_ratios, 'Full model without price feature')
+mlr4, nn4, dt4, base4, _ = cross_validation(all_variables, labels, all_cats + ['latitude', 'longitude'] + all_trans_types + all_cats_ratios, 'Full w/o without price feature')
 
-mlr5, nn5, dt5, base5 = cross_validation(all_variables, labels, all_cats + all_trans_types + all_cats_ratios + ['price'], 'Full model without location features')
+mlr5, nn5, dt5, base5, wl = cross_validation(all_variables, labels, all_cats + all_trans_types + all_cats_ratios + ['price'], 'Full model w/o location features')
 
-mlr6, nn6, dt6, base6 = cross_validation(all_variables, labels, all_cats + ['price', 'latitude', 'longitude'] + all_cats_ratios, 'Full model without transaction type features')
+mlr6, nn6, dt6, base6, _ = cross_validation(all_variables, labels, all_cats + ['price', 'latitude', 'longitude'] + all_cats_ratios, 'Full model w/o transaction type features')
+
+df = pd.DataFrame([])
+df['Model'] = ['MLR', 'MLR', 'DT', 'DT', 'NN', 'NN', 'Baseline', 'Baseline']*15
+df['data'] = ['Full model']*40 + ['W/O category ratio features']*40 + ['W/O location features']*40
+df['MSE'] = wf + wr + wl
+sns.barplot(x="Model", y="MSE", hue="data", data=df, palette="Paired")
+plt.title('w/o category ratio VS w/o location')
+plt.legend(loc=[1, 1])
+plt.tight_layout()
+#plt.box(False)
+plt.show()
+plt.savefig(fname="D:\Brown_MS\spring2020\cs1951a\cs1951a_final_project\pictures\models\claim3",format="svg")
 
 table = [[mlr1, dt1, nn1, base1],
 [mlr2, dt2, nn2, base2],
