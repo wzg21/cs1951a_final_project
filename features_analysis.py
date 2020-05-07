@@ -70,27 +70,27 @@ for g in [all_trans_types, all_cats, all_cats_ratios, locations, price]:
 
 plt.figure(figsize=(12, 9))
 
-sns.set(style="whitegrid")
+sns.set(style="whitegrid", font_scale=1.1)
 sns.boxplot(x='Delivery', y='Rating', data=df, palette="Paired")
 plt.title('Rating Distribution for Delievery=0 and Delievery=1', fontsize='large', fontweight='semibold')
 plt.box(False)
 plt.savefig(fname="D:/Brown_MS/spring2020/cs1951a/cs1951a_final_project/pictures/data/deliever.svg",format="svg")
 
-sns.set(style="whitegrid")
+sns.set(style="whitegrid", font_scale=1.1)
 sns.boxplot(x='Pickup', y='Rating', data=df, palette="Paired")
 plt.title('Rating Distribution for Pickup=0 and Pickup=1', fontsize='large', fontweight='semibold')
 plt.box(False)
 plt.savefig(fname="D:/Brown_MS/spring2020/cs1951a/cs1951a_final_project/pictures/data/pickup.svg",format="svg")
 
-sns.set(style="whitegrid")
+sns.set(style="whitegrid", font_scale=1.1)
 sns.boxplot(x='Restaurant_reservation', y='Rating', data=df, palette="Paired")
 plt.title('Rating Distribution for Reservation=0 and Reservation=1', fontsize='large', fontweight='semibold')
 plt.box(False)
 plt.savefig(fname="D:/Brown_MS/spring2020/cs1951a/cs1951a_final_project/pictures/data/reservation.svg",format="svg")
 
-sns.set(style="whitegrid")
+sns.set(style="whitegrid", font_scale=1.1)
 sns.boxplot(x='Price', y='Rating', data=df, palette="Paired")
-plt.title('Rating Distribution for each Price Level', fontsize='large', fontweight='semibold')
+plt.title('Rating Distribution for Each Price Level', fontsize='large', fontweight='semibold')
 plt.box(False)
 plt.savefig(fname="D:/Brown_MS/spring2020/cs1951a/cs1951a_final_project/pictures/data/price.svg",format="svg")
 
@@ -105,8 +105,9 @@ for i, cat in enumerate(all_cats):
 boxplot_df = boxplot_df.sort_values(['mean']).reset_index(drop=True)
 fig, ax = plt.subplots()
 fig.set_size_inches(8, boxplot_df['Category'].nunique()/4)
+sns.set(font_scale=1.1)
 ax = sns.boxplot(x='Rating', y='Category', data=boxplot_df, palette="Paired")
-plt.title('Rating Distribution for each Category', fontsize='large', fontweight='semibold')
+plt.title('Rating Distribution for Each Category', fontsize='large', fontweight='semibold')
 plt.box(False)
 plt.tight_layout()
 plt.savefig(fname="D:/Brown_MS/spring2020/cs1951a/cs1951a_final_project/pictures/data/cat.svg",format="svg")
